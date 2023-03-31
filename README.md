@@ -12,7 +12,7 @@ gcptools:
 
 ## Description
 
-CIS_MRP is a repo containing the pipeline for the headline COVID-19 Prevalence model. This has been constructed as a main.R (or .ipynb) file which calls on functionalised code from other packages/repos. This Reproducible Analytical Pipeline (RAP) uses Multilevel Regression with Postsratification a bayesian estimation method.
+CIS_MRP is a repo containing the pipeline for the headline COVID-19 Prevalence model. This has been constructed as a main.R (or .ipynb) file which calls on functionalised code from other packages/repos. This Reproducible Analytical Pipeline (RAP) uses Multilevel Regression with Postsratification a bayesian estimation method. This pipeline is dependent on the `gcptools` and `cismrp` packages which have been developed by ONS. The links to public versions of these repo's can be found below. 
 
 The pipeline has been set up to run on Google Cloud Platform (GCP). 
 
@@ -34,37 +34,30 @@ The pipeline has been set up to run on Google Cloud Platform (GCP).
    
     
 ## Installation
-  
-### 1. Prerequisites (see spreadsheet   [here](https://officenationalstatistics.sharepoint.com/:x:/r/sites/covid19/CISA_Analysis/Polestar/ProjectManagement_Audit/Polestar%20user%20access%20check.xlsx?d=w48ca63f23a9744e99a85b18a41e50f1c&csf=1&web=1&e=Umppp3))
- 
- 1. A GitHub Account
- 2. A Personal Access Token for authentication to GitHub
- 3. Membership of the ONS Digital organisation and the cis_methods_analysis team
 
-### 2. Cloning the repo
- 1. Use git clone button (see slidedeck [here](https://officenationalstatistics.sharepoint.com/:p:/r/sites/covid19/CISA_Analysis/Polestar/User_Guidance/Screenshot%20walk%20throughs.pptx?d=w6fd6a1ec9fe847848e07d962b76da5bf&csf=1&web=1&e=H1XX7g))
+### 1. Cloning the CIS_MRP_PUBLIC repo
+ 1. Use git clone button 
  2. Copy the repo address to your clipboard
  3. Paste the address into the user interface
- 4. Use your PAT to authenticate to GitHub.
  
-### 3. Install devtools
+### 2. Install devtools
  1. Open a console an run `install.packages(devtools)`
 
-### 4. Install `cismrp`
- 1. Ensure you are on the main branch and at the top level directory in the repository.
- 2. Install the latest `cismrp` package by executing the command `devtools::install("cismrp", upgrade = FALSE)` from the console.
- 3. Test installation is sucessful by running `library("cismrp")` - No errors should be returned
- 
+### 3. Install `cismrp` from the cismrp_PUBLIC repo
+ 1. run the following code: `devtools::install_github("ONSdigital/cismrp_PUBLIC")`
+
+### 4. Install `gcptools` from the gcptools_PUBLIC repo
+1.  run the following code `devtools::install_github("ONSdigital/gcptools_PUBLIC")
 
 ## Regular production
 
  1. Open main.ipynb in your google cloud notebook
- 2. Ensure you are in the master branch and `git pull`
+ 2. Ensure you are in the main branch and `git pull`
  3. Update main_config.yaml to use the latest dates and setting, press ctrl + s to save.
  4. Check <country>_config.yamls have the correct model settings, press ctrl + s to save.
  5. `Commit` your changes.
  6. Check your outputs, if the run has completed sucessfully `push` your commits.
- 7. If you are no longer working in Polestar close your notebook
+ 7. If you are no longer working in google cloud close your notebook
 
 
 ## Synthetic Data
