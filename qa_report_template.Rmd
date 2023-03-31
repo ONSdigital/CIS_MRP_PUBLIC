@@ -1,0 +1,697 @@
+---
+output:
+  html_document:
+    css: "style.css"
+    toc: false
+    toc_depth: 2
+    toc_float:
+    collapsed: false
+    theme: flatly
+    fig_width: 10 
+    fig_height: 7 
+params:
+    main_config: NULL
+    prevalence_time_series: NULL
+    previous_prevalence_time_series: NULL
+    reference_day_vs_weeks_before_probabilities: NULL
+    country_configs: NULL
+    cleaned_aggregated_sample: NULL
+    aggregated_HH: NULL
+    aggregated_sample: NULL
+    post_stratified_draws: NULL
+    
+title: "Prevalence of Infections by Region, Country and Variant"
+subtitle: "Quality report"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author:
+    name: Covid Infection Survey Analysis Team
+---
+
+```{r ons-logo, echo=FALSE}
+htmltools::img(src = gcptools::ons_logo(), 
+               alt = 'logo', 
+               style = 'position:absolute; top:0; padding:10px; padding-bottom:40px; width:352px; height:160px')
+```
+<div>
+<font color ="red">
+<b>OFFICIAL SENSITIVE</b><br />
+DO NOT SHARE WITHOUT PERMISSION
+<font color ="black">
+</div>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE,
+                      echo = FALSE)
+                      
+library(dplyr)
+library(kableExtra)
+library(magrittr)
+
+main_config <- params$main_config
+prevalence_time_series <- params$prevalence_time_series
+reference_day_vs_weeks_before_probabilities <- params$reference_day_vs_weeks_before_probabilities
+country_configs <- params$country_configs
+cleaned_aggregated_sample <- params$cleaned_aggregated_sample
+pos_by_day <- params$pos_by_day
+post_stratified_draws <- params$post_stratified_draws
+posterior_draws <- params$posterior_draws
+
+```
+
+**Data run on:** `r format(as.Date(main_config$run_settings$data_run, "%Y%m%d"), "%d %B %Y")`<br />
+**Previous run on:** `r format(as.Date(main_config$run_settings$prev_data_run, "%Y%m%d"), "%d %B %Y")`<br />
+
+# Results {.tabset .tabset-pills}
+
+## England {.tabset .tabset-pills}
+
+**Includes data up to:** `r format(main_config$run_settings$end_date[["England"]],"%d %B %Y")`<br /> 
+**Reference day:** `r format(main_config$run_settings$end_date[["England"]] - 3, "%d %B %Y")` 
+
+```{r fortnightly-trend-summary-england}
+
+create_coloured_trends_table(reference_day_vs_weeks_before_probabilities, 
+                             "England", 
+                             "ctall", 
+                             "country")
+
+```
+-  `r get_summary_statement(current_vs_previous_probabilities, "England", "ctall")`
+-  `r get_population_numbers_statement(filtered_pop_tables, prevalence_time_series, "England", "ctall")`
+-  `r get_population_percentage_statement(prevalence_time_series,"England", "ctall")`
+- `r get_previous_population_percentage_statement(previous_prevalence_time_series,"England", "ctall")`
+- Caution should be taken in over-interpretting any small movements in the latest trends
+
+### Comparison with previously published
+
+```{r overlay-plot-england}
+create_overlay_plot(prevalence_time_series, 
+                    previous_prevalence_time_series, 
+                    "England", 
+                    "ctall",
+                    "country")
+```
+
+### Spaghetti Plot
+
+```{r spaghetti-plot-england}
+
+spaghetti_plot(prevalence_time_series, 
+               post_stratified_draws, 
+               "England", 
+               "ctall", 
+               "country", 
+               main_config)
+
+```
+
+### By Variant
+
+```{r overlay-variant-breakdown-england}
+
+create_variant_overlay(prevalence_time_series, 
+                       "England", 
+                       main_config, 
+                       "country")
+
+```
+
+### Comparison Against Raw
+
+```{r raw-vs-modelled-england}
+
+plot_raw_vs_modelled(sample_data = aggregated_sample,
+                     household_data = aggregated_HH,
+                     prevalence_time_series = prevalence_time_series,
+                     COUNTRY =  "England",
+                     country_configs = country_configs,
+                     region_or_country = "country")  
+```
+
+### Low Returns
+
+**How to interpret this plot:** 
+
+- This plot shows the unweighted positivity or prevalence of infections (black) against an measure of daily returns. 
+- This measure is calculated by taking the average number of returns per day over the period, and comparing each day to the period average. 
+- Green bars indicate above average returns, whereas orange and red indicate below average returns. 
+- When looking at the day to day changes in the unweighted prevalence, if there are a number of below average returns around that day, the estimates on that day may be less robust. 
+
+``` {r low-returns-england}
+data <- create_raw_counts_with_prevalence(aggregated_sample,
+                                  aggregated_HH,
+                                  prevalence_time_series)%>%
+    dplyr::mutate(visit_date = lubridate::ymd(visit_date))%>%
+    dplyr::filter(region == "England")%>%
+    dplyr::group_by(region)%>%
+    dplyr::mutate(average_n_returns = round(sum(N) / length(N),0),
+                  n_over_average = N / average_n_returns * 100, 
+                  diff_from_100 = n_over_average - 100,
+                 "Unweighted Percentage" = (proportion*10))
+
+
+ ggplot2::ggplot(data)+
+     ggplot2::geom_col(ggplot2::aes(x = visit_date,
+                                    y = -diff_from_100,
+                                    fill = diff_from_100))+
+     ggplot2::geom_point(ggplot2::aes(x = visit_date,
+                                     y = `Unweighted Percentage`),
+                                     size = 1)+
+     ggplot2::geom_hline(ggplot2::aes(yintercept = 0),colour = "red", size = 2)+
+     ggplot2::scale_y_continuous(name ="(Bars)\n% Daily Returns Below Average",
+                                 breaks = seq(0,50,10), labels = c("Average","10%", 
+                                                                     "20%","30%", "40%",
+                                                                     "50%\nBelow\nAverage"),
+                      sec.axis = ggplot2::sec_axis(~(./10), name = "(Black points)\nRaw Percentage",
+                                                   labels = c("0%","1%","2%","3%", "4%", "5%")))+
+    ggplot2::scale_x_date(date_breaks = "week", date_labels = "%d %b\n%Y")+
+    ggplot2::coord_cartesian(ylim = c(-0,50))+
+    ggplot2::scale_fill_stepsn(colours=c("darkred","yellow","darkgreen"), 
+                               name = "% Returns\nCompared to\nAverage",
+                               breaks=c(-200,-50,0))+
+    theme_CIS()+
+    ggplot2::labs(x = "Date")
+```
+
+### Raw vs Modelled Table
+
+```{r positive-swabs-by-day-england}
+
+create_raw_vs_prevalence_table(aggregated_sample,
+                               aggregated_HH,
+                               prevalence_time_series, 
+                               "England",
+                               "country")
+```
+
+### Configuration
+
+```{r check-missing-dates-england, comment=NA}
+
+check_missing_dates(cleaned_aggregated_sample, 
+                    main_config)
+
+```
+
+**Model run in:** `r format(main_config$run_settings$environment)`<br />
+
+```{r model-time-period-england}
+
+start_date <- (main_config$run_settings$end_date$England) - (country_configs$England$run_settings$n_days_to_model)
+
+end_date <- main_config$run_settings$end_date$England
+
+model_time_period <- paste0(start_date, " - ", end_date)
+
+```
+
+**Model time period:** `r format(model_time_period)`<br />
+
+**Variants run:** `r format(paste0(country_configs$England$run_settings$variants))`<br />
+
+**Adapt Delta:** `r format(paste0(country_configs$England$model_settings$adapt_delta))`<br />
+
+**Iterations:** `r format(paste0(country_configs$England$model_settings$iterations))`<br />
+
+**Model formula:** `r format(get_model_formula(model = models, country = "England", variant = "1"))`<br />
+
+**Divergent Transistions**
+
+```{r divergent-table-england}
+
+make_divergent_table(country_configs, "England", models, main_config)
+
+```
+
+
+## England Regions {.tabset .tabset-pills}
+
+
+```{r fortnightly-trend-summary-england-regions}
+
+create_coloured_trends_table(reference_day_vs_weeks_before_probabilities, 
+                             "England", 
+                             "ctall", 
+                             "region")
+
+```
+
+### Comparison with previously published
+
+```{r overlay-plot-england-regions}
+create_overlay_plot(prevalence_time_series, 
+                    previous_prevalence_time_series, 
+                    "England", 
+                    "ctall",
+                    "region")
+```
+
+### Spaghetti Plot
+
+```{r spaghetti-plot-england-regions}
+
+spaghetti_plot(prevalence_time_series, 
+               post_stratified_draws, 
+               "England", 
+               "ctall", 
+               "region", 
+               main_config)
+
+```
+
+### By Variant
+
+```{r overlay-variant-breakdown-england-regions}
+
+create_variant_overlay(prevalence_time_series, 
+                       "England", 
+                       main_config, 
+                       "region")
+
+```
+
+### Comparison Against Raw
+
+```{r raw-vs-modelled-england-regions}
+
+plot_raw_vs_modelled(sample_data = aggregated_sample,
+                     household_data = aggregated_HH,
+                     prevalence_time_series = prevalence_time_series,
+                     COUNTRY =  "England",
+                     country_configs = country_configs,
+                     region_or_country = "region")  
+```
+
+### Low Returns
+
+``` {r low-returns-england-regions}
+
+```
+
+### Raw vs Modelled Table
+
+```{r positive-swabs-by-day-england-regions}
+
+create_raw_vs_prevalence_table(aggregated_sample,
+                               aggregated_HH,
+                               prevalence_time_series, 
+                               "England",
+                               "region")
+```
+
+### Configuration
+
+```{r check-missing-dates-england-regions, comment=NA}
+
+check_missing_dates(cleaned_aggregated_sample, 
+                    main_config)
+
+```
+
+**Model run in:** `r format(main_config$run_settings$environment)`<br />
+
+```{r model-time-period-england-regions}
+
+start_date <- (main_config$run_settings$end_date$England) - (country_configs$England$run_settings$n_days_to_model)
+
+end_date <- main_config$run_settings$end_date$England
+
+model_time_period <- paste0(start_date, " - ", end_date)
+
+```
+
+**Model time period:** `r format(model_time_period)`<br />
+
+**Variants run:** `r format(paste0(country_configs$England$run_settings$variants))`<br />
+
+**Adapt Delta:** `r format(paste0(country_configs$England$model_settings$adapt_delta))`<br />
+
+**Iterations:** `r format(paste0(country_configs$England$model_settings$iterations))`<br />
+
+**Model formula:** `r format(get_model_formula(model = models, country = "England", variant = "1"))`<br />
+
+**Divergent Transistions**
+
+```{r divergent-table-england-regions}
+
+make_divergent_table(country_configs, "England", models, main_config)
+
+```
+
+## Scotland {.tabset .tabset-pills}
+
+```{r fortnightly-trend-summary-scotland}
+
+create_coloured_trends_table(reference_day_vs_weeks_before_probabilities, 
+                             "Scotland", 
+                             "ctall", 
+                             "country")
+
+```
+-  `r get_summary_statement(current_vs_previous_probabilities, "Scotland", "ctall")`
+-  `r get_population_numbers_statement(filtered_pop_tables, prevalence_time_series, "Scotland", "ctall")`
+-  `r get_population_percentage_statement(prevalence_time_series,"Scotland", "ctall")`
+- `r get_previous_population_percentage_statement(previous_prevalence_time_series,"Scotland", "ctall")`
+- Caution should be taken in over-interpretting any small movements in the latest trends
+
+
+### Comparison with previously published
+
+```{r overlay-plot-scotland}
+create_overlay_plot(prevalence_time_series, 
+                    previous_prevalence_time_series, 
+                    "Scotland", 
+                    "ctall",
+                    "country")
+```
+
+### Spaghetti Plot
+
+```{r spaghetti-plot-scotland}
+
+spaghetti_plot(prevalence_time_series, 
+               post_stratified_draws, 
+               "Scotland", 
+               "ctall", 
+               "country", 
+               main_config)
+
+```
+
+### By Variant
+
+```{r overlay-variant-breakdown-scotland}
+
+create_variant_overlay(prevalence_time_series, 
+                       "Scotland", 
+                       main_config, 
+                       "country")
+
+```
+
+### Comparison Against Raw
+
+```{r raw-vs-modelled-scotland}
+
+plot_raw_vs_modelled(sample_data = aggregated_sample,
+                     household_data = aggregated_HH,
+                     prevalence_time_series = prevalence_time_series,
+                     COUNTRY =  "Scotland",
+                     country_configs = country_configs,
+                     region_or_country = "country")  
+```
+
+### Low Returns
+
+``` {r low-returns-scotland}
+
+```
+
+### Raw vs Modelled Table
+
+```{r positive-swabs-by-day-scotland}
+
+create_raw_vs_prevalence_table(aggregated_sample,
+                               aggregated_HH,
+                               prevalence_time_series, 
+                               "Scotland",
+                               "country")
+```
+
+### Configuration
+
+```{r check-missing-dates-scotland, comment=NA}
+
+check_missing_dates(cleaned_aggregated_sample, 
+                    main_config)
+
+```
+
+**Model run in:** `r format(main_config$run_settings$environment)`<br />
+
+```{r model-time-period-scotland}
+
+start_date <- (main_config$run_settings$end_date$Scotland) - (country_configs$Scotland$run_settings$n_days_to_model)
+
+end_date <- main_config$run_settings$end_date$Scotland
+
+model_time_period <- paste0(start_date, " - ", end_date)
+
+```
+
+**Model time period:** `r format(model_time_period)`<br />
+
+**Variants run:** `r format(paste0(country_configs$Scotland$run_settings$variants))`<br />
+
+**Adapt Delta:** `r format(paste0(country_configs$Scotland$model_settings$adapt_delta))`<br />
+
+**Iterations:** `r format(paste0(country_configs$Scotland$model_settings$iterations))`<br />
+
+**Model formula:** `r format(get_model_formula(model = models, country = "Scotland", variant = "1"))`<br />
+
+**Divergent Transistions**
+
+```{r divergent-table-scotland}
+
+make_divergent_table(country_configs, "Scotland", models, main_config)
+
+```
+
+## Wales {.tabset .tabset-pills}
+
+```{r fortnightly-trend-summary-wales}
+
+create_coloured_trends_table(reference_day_vs_weeks_before_probabilities, 
+                             "Wales", 
+                             "ctall", 
+                             "country")
+
+```
+
+-  `r get_summary_statement(current_vs_previous_probabilities, "Wales", "ctall")`
+-  `r get_population_numbers_statement(filtered_pop_tables, prevalence_time_series, "Wales", "ctall")`
+-  `r get_population_percentage_statement(prevalence_time_series,"Wales", "ctall")`
+- `r get_previous_population_percentage_statement(previous_prevalence_time_series,"Wales", "ctall")`
+- Caution should be taken in over-interpretting any small movements in the latest trends
+
+### Comparison with previously published
+
+```{r overlay-plot-wales}
+create_overlay_plot(prevalence_time_series, 
+                    previous_prevalence_time_series, 
+                    "Wales", 
+                    "ctall",
+                    "country")
+```
+
+### Spaghetti Plot
+
+```{r spaghetti-plot-wales}
+
+spaghetti_plot(prevalence_time_series, 
+               post_stratified_draws, 
+               "Wales", 
+               "ctall", 
+               "country", 
+               main_config)
+
+```
+
+### By Variant
+
+```{r overlay-variant-breakdown-wales}
+
+create_variant_overlay(prevalence_time_series, 
+                       "Wales", 
+                       main_config, 
+                       "country")
+
+```
+
+### Comparison Against Raw
+
+```{r raw-vs-modelled-wales}
+
+plot_raw_vs_modelled(sample_data = aggregated_sample,
+                     household_data = aggregated_HH,
+                     prevalence_time_series = prevalence_time_series,
+                     COUNTRY =  "Wales",
+                     country_configs = country_configs,
+                     region_or_country = "country")  
+```
+
+### Low Returns
+
+``` {r low-returns-wales}
+
+```
+
+### Raw vs Modelled Table
+
+```{r positive-swabs-by-day-wales}
+
+create_raw_vs_prevalence_table(aggregated_sample,
+                               aggregated_HH,
+                               prevalence_time_series, 
+                               "Wales",
+                               "country")
+```
+
+### Configuration
+
+```{r check-missing-dates-wales, comment=NA}
+
+check_missing_dates(cleaned_aggregated_sample, 
+                    main_config)
+
+```
+
+**Model run in:** `r format(main_config$run_settings$environment)`<br />
+
+```{r model-time-period-wales}
+
+start_date <- (main_config$run_settings$end_date$Wales) - (country_configs$Wales$run_settings$n_days_to_model)
+
+end_date <- main_config$run_settings$end_date$Wales
+
+model_time_period <- paste0(start_date, " - ", end_date)
+
+```
+
+**Model time period:** `r format(model_time_period)`<br />
+
+**Variants run:** `r format(paste0(country_configs$Wales$run_settings$variants))`<br />
+
+**Adapt Delta:** `r format(paste0(country_configs$Wales$model_settings$adapt_delta))`<br />
+
+**Iterations:** `r format(paste0(country_configs$Wales$model_settings$iterations))`<br />
+
+**Model formula:** `r format(get_model_formula(model = models, country = "Wales", variant = "1"))`<br />
+
+**Divergent Transistions**
+
+```{r divergent-table-wales}
+
+make_divergent_table(country_configs, "Wales", models, main_config)
+
+```
+
+## Northern Ireland {.tabset .tabset-pills}
+
+```{r fortnightly-trend-summary-northern-ireland}
+
+create_coloured_trends_table(reference_day_vs_weeks_before_probabilities, 
+                             "Northern Ireland", 
+                             "ctall", 
+                             "country")
+
+```
+
+-  `r get_summary_statement(current_vs_previous_probabilities, "Northern Ireland", "ctall")`
+-  `r get_population_numbers_statement(filtered_pop_tables, prevalence_time_series, "Northern Ireland", "ctall")`
+-  `r get_population_percentage_statement(prevalence_time_series, "Northern Ireland", "ctall")`
+- `r get_previous_population_percentage_statement(previous_prevalence_time_series, "Northern Ireland", "ctall")`
+- Caution should be taken in over-interpretting any small movements in the latest trends
+
+
+### Comparison with previously published
+
+```{r overlay-plot-northern-ireland}
+create_overlay_plot(prevalence_time_series, 
+                    previous_prevalence_time_series, 
+                    "Northern Ireland", 
+                    "ctall",
+                    "country")
+```
+
+### Spaghetti Plot
+
+```{r spaghetti-plot-northern-ireland}
+
+spaghetti_plot(prevalence_time_series, 
+               post_stratified_draws, 
+               "Northern Ireland", 
+               "ctall", 
+               "country", 
+               main_config)
+
+```
+
+### By Variant
+
+```{r overlay-variant-breakdown-northern-ireland}
+
+create_variant_overlay(prevalence_time_series, 
+                       "Northern Ireland", 
+                       main_config, 
+                       "country")
+
+```
+
+### Comparison Against Raw
+
+```{r raw-vs-modelled-northern-ireland}
+
+plot_raw_vs_modelled(sample_data = aggregated_sample,
+                     household_data = aggregated_HH,
+                     prevalence_time_series = prevalence_time_series,
+                     COUNTRY =  "Northern Ireland",
+                     country_configs = country_configs,
+                     region_or_country = "country")  
+```
+
+### Low Returns
+
+``` {r low-returns-northern-ireland}
+
+```
+
+### Raw vs Modelled Table
+
+```{r positive-swabs-by-day-northern-ireland}
+
+create_raw_vs_prevalence_table(aggregated_sample,
+                               aggregated_HH,
+                               prevalence_time_series, 
+                               "Northern Ireland",
+                               "country")
+```
+
+### Configuration
+
+```{r check-missing-dates-northern-ireland, comment=NA}
+
+check_missing_dates(cleaned_aggregated_sample, 
+                    main_config)
+
+```
+
+**Model run in:** `r format(main_config$run_settings$environment)`<br />
+
+```{r model-time-period-northern-ireland}
+
+start_date <- (main_config$run_settings$end_date$`Northern Ireland`) - (country_configs$`Northern Ireland`$run_settings$n_days_to_model)
+
+end_date <- main_config$run_settings$end_date$`Northern Ireland`
+
+model_time_period <- paste0(start_date, " - ", end_date)
+
+```
+
+**Model time period:** `r format(model_time_period)`<br />
+
+**Variants run:** `r format(paste0(country_configs$'Northern Ireland'$run_settings$variants))`<br />
+
+**Adapt Delta:** `r format(paste0(country_configs$'Northern Ireland'$model_settings$adapt_delta))`<br />
+
+**Iterations:** `r format(paste0(country_configs$'Northern Ireland'$model_settings$iterations))`<br />
+
+**Model formula:** `r format(get_model_formula(model = models, country = "Northern Ireland", variant = "1"))`<br />
+
+**Divergent Transistions**
+
+```{r divergent-table-northern-ireland}
+
+make_divergent_table(country_configs, "Northern Ireland", models, main_config)
+
+```

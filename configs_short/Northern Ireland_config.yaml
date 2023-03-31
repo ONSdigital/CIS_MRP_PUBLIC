@@ -1,0 +1,30 @@
+run_settings:
+    variants:
+        - 1
+        - 2
+        - 4 
+        - 5
+    n_days_to_model: 56
+model_settings:
+    by_region: FALSE
+    knots: 6
+    seed: 42
+    adapt_delta: 0.59
+    cores: 4
+    chains: 4
+    iterations: 250
+    refresh: 0
+    prior:
+        location: 0
+        scale: 0.5
+    prior_smooth: 
+        location: 2
+    prior_covariance:
+        shape: 1
+        scale: 1
+probability_output_settings:
+    ref_days_from_end: 3
+    comparison_period: 
+        - 7
+        - 14
+    percent_change_threshold: 15

@@ -1,0 +1,39 @@
+run_settings:
+    analyst: "Colin"  #enter your "name"
+    data_run: "20230313" # "yyyymmdd"
+    end_date: 
+        England: "20230307" #"yyyymmdd"
+        Northern Ireland: "20230307" #"yyyymmdd"
+        Scotland: "20230306" #"yyyymmdd"
+        Wales: "20230307" #"yyyymmdd"
+    prev_data_run: "20230306" #enter desired previous data run date for overlay plots and tables "yyyymmdd"
+    prev_end_date: 
+        England: "20230228" #"yyyymmdd"
+        Northern Ireland: "20230228" #"yyyymmdd" 
+        Scotland: "20230228" #"yyyymmdd"
+        Wales: "20230228" #"yyyymmdd"
+    rerun: false #only set to true if changing end_date for secondary run
+    test: true #test run with 'full' model settings - set to false as default for production
+    test_configs_short: false #test run with 'short' model settings - set to false as default for production
+    environment: "GCP"
+    countries: 
+        - "England"
+        - "Scotland"
+        - "Wales
+        - "Northern Ireland"
+    qa_report_filename_suffix: NULL #change this to a string if you want to change the end of your qa_report filename
+    days_to_check: 60
+paths:
+    population_totals: "poststrat_updated_census_2021_aggregated.csv"
+    sample_aggregates: "_main_aggregates"
+    household_checks: "_hh_checks_aggregates"
+GCP:
+    wip_bucket: "ons-psplus-analysis-prod-cis-wip" # this is where you can save work in progress datasets
+    data_bucket: "ons-psplus-data-prod-psplus-cis-data" # this is where the ingest data will be located
+    review_bucket: "ons-psplus-analysis-prod-cis-review" # this is where you can save data ready for review and export
+    
+variant_labels:
+    ctall: "All"
+    ct4: "ct4, S Neg; BA.5*/BQ.1*"
+    ct7: "ct7, S Pos; BA.2.75*/XBB*"
+    ctnot4not7: "Variant Unidentifiable"
