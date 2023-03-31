@@ -3,12 +3,12 @@
 Local packages used:
 
 cismrp:
-[![R](https://github.com/ONSdigital/cismrp/actions/workflows/r.yaml/badge.svg?branch=main)](https://github.com/ONSdigital/cismrp/actions/workflows/r.yaml)
-[![codecov](https://codecov.io/gh/ONSdigital/cismrp/branch/main/graph/badge.svg?token=N70MPthEj1)](https://codecov.io/gh/ONSdigital/cismrp)
+[![R](https://github.com/ONSdigital/cismrp_PUBLIC/actions/workflows/r.yaml/badge.svg?branch=main)](https://github.com/ONSdigital/cismrp_PUBLIC/actions/workflows/r.yaml)
+[![codecov](https://codecov.io/gh/ONSdigital/cismrp_PUBLIC/branch/main/graph/badge.svg?token=N70MPthEj1)](https://codecov.io/gh/ONSdigital/cismrp_PUBLIC)
 
 gcptools:
-[![R-CMD-check](https://github.com/ONSdigital/gcptools/actions/workflows/r.yml/badge.svg)](https://github.com/ONSdigital/gcptools/actions/workflows/r.yml)
-[![codecov](https://codecov.io/gh/ONSdigital/gcptools/branch/main/graph/badge.svg?token=0ExPkGuzYa)](https://codecov.io/gh/ONSdigital/gcptools)
+[![R-CMD-check](https://github.com/ONSdigital/gcptools_PUBLIC/actions/workflows/r.yml/badge.svg)](https://github.com/ONSdigital/gcptools_PUBLIC/actions/workflows/r.yml)
+[![codecov](https://codecov.io/gh/ONSdigital/gcptools_PUBLIC/branch/main/graph/badge.svg?token=0ExPkGuzYa)](https://codecov.io/gh/ONSdigital/gcptools_PUBLIC)
 
 ## Description
 
