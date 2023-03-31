@@ -8,7 +8,7 @@ cismrp:
 
 gcptools:
 [![R-CMD-check](https://github.com/ONSdigital/gcptools_PUBLIC/actions/workflows/r.yml/badge.svg)](https://github.com/ONSdigital/gcptools_PUBLIC/actions/workflows/r.yml)
-[![codecov](https://codecov.io/gh/ONSdigital/gcptools_PUBLIC/branch/main/graph/badge.svg?token=0ExPkGuzYa)](https://codecov.io/gh/ONSdigital/gcptools_PUBLIC)
+[![codecov](https://codecov.io/gh/ONSdigital/gcptools_PUBLIC/branch/main/graph/badge.svg?token=bV6FD7PUSr)](https://codecov.io/gh/ONSdigital/gcptools_PUBLIC)
 
 ## Description
 
